@@ -2,6 +2,7 @@
 Copyright 2020 Lightbend Inc.
 Licensed under the Apache License, Version 2.0.
 """
+import random
 # imports fom Akka Serverless SDK
 from akkaserverless.action_context import ActionContext
 from akkaserverless.action_protocol_entity import Action
@@ -12,7 +13,7 @@ from api_spec_pb2 import (MyRequest, MyResponse, _MYAPI, DESCRIPTOR as API_DESCR
 
 entity = Action(_MYAPI, [API_DESCRIPTOR])
 
-@entity.unary_handler("Hello")
-def hello(command: MyRequest, context: ActionContext):
-    resp = MyResponse(text= "Do you want to play a game, " + command.name + "?")
+@entity.unary_handler("GetUser")
+def fetch_user(command: MyRequest, context: ActionContext):
+    resp = MyResponse(name= "My Name", status= random.choice(['active', 'inactive']), online= bool(random.getrandbits(1)))
     return resp

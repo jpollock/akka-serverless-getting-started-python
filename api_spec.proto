@@ -8,18 +8,19 @@ import "google/api/annotations.proto";
 package com.example;
 
 message MyRequest {
-    string name = 1;
+    string user_profile_id = 1;
 }
 
 message MyResponse {
-    string text = 1;
+    string name = 1;
+    string status = 2;
+    bool online = 3;
 }
 
 service MyApi {
-    rpc Hello(MyRequest) returns (MyResponse) {
+    rpc GetUser(MyRequest) returns (MyResponse) {
         option (google.api.http) = {
-            post: "/hello",
-            body: "*"
+            get: "/users/{user_profile_id}",
         };  
     }
 }
