@@ -4,4 +4,4 @@ This is the current list of maintainers and contributors for this example projec
 
 | Role        | GitHub ID   | Affiliation |
 |-------------|-------------|-------------|
-| Maintainer  | @jpolloc    | Lightbend   |
+| Maintainer  | @jpollock    | Lightbend   |

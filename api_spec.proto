@@ -7,14 +7,27 @@ import "google/api/annotations.proto";
 
 package com.example;
 
+message UserProfile {
+    string user_profile_id = 1 [(akkaserverless.field).entity_key = true];
+    string name = 2;
+    string status = 3;
+    repeated Device devices = 4;
+}
+
+message Device {
+    string id = 1;
+    string name = 2;
+}
+
 message MyRequest {
-    string user_profile_id = 1;
+    string user_profile_id = 1 [(akkaserverless.field).entity_key = true];
 }
 
 message MyResponse {
     string name = 1;
     string status = 2;
     bool online = 3;
+    repeated Device devices = 4;
 }
 
 service MyApi {
@@ -23,4 +36,16 @@ service MyApi {
             get: "/users/{user_profile_id}",
         };  
     }
+    rpc CreateUser(UserProfile) returns (MyResponse) {
+        option (google.api.http) = {
+            post: "/users",
+            body: "*"
+        };  
+    }
+    rpc UpdateUser(UserProfile) returns (MyResponse) {
+        option (google.api.http) = {
+            put: "/users/{user_profile_id}",
+            body: "*"
+        };  
+    }    
 }
