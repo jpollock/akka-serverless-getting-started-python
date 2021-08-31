@@ -7,10 +7,13 @@ import random
 from akkaserverless.value_context import ValueEntityCommandContext
 from akkaserverless.value_entity import ValueEntity          
 
-
-
 # import from generated GRPC file(s)
 from api_spec_pb2 import (UserProfile, MyRequest, MyResponse, _MYAPI, DESCRIPTOR as API_DESCRIPTOR)
+
+from akkaserverless.view import View
+from api_spec_pb2 import (_MYQUERYAPI, DESCRIPTOR as FILE_DESCRIPTOR)
+
+view = View(_MYQUERYAPI,[FILE_DESCRIPTOR])
 
 def init(entity_id: str) -> UserProfile:
     return UserProfile()
@@ -36,3 +39,6 @@ def update_user(state: UserProfile, command: UserProfile, context: ValueEntityCo
 
     context.update_state(state)
     return MyResponse(name= state.name, status= state.status, online= bool(random.getrandbits(1)))
+
+
+

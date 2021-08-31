@@ -47,5 +47,33 @@ service MyApi {
             put: "/users/{user_profile_id}",
             body: "*"
         };  
-    }    
+    } 
+
+ 
+}
+
+message UsersResponse {
+    repeated UserProfile results = 1; 
+}
+
+service MyQueryApi {
+    rpc UpdateView(UserProfile) returns (UserProfile) {
+        option (akkaserverless.method).eventing = {
+          in: {
+            value_entity: "user_profiles"
+          }
+        };
+        option (akkaserverless.method).view.update = {
+          table: "user_profiles"
+        };
+    }
+
+    rpc GetUsers(google.protobuf.Empty) returns (UsersResponse) {
+        option (akkaserverless.method).view.query = {
+          query: "SELECT * AS results FROM user_profiles"
+        };
+        option (google.api.http) = {
+            get: "/users"
+        };  
+    }  
 }

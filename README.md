@@ -274,3 +274,80 @@ The objective of this exercise will be to deliver on the following requirements:
                 return MyResponse(name= state.name, status= state.status, online= bool(random.getrandbits(1)))
             ```
         15. Start
+        16. **add query**
+        17. Open up proto file
+            1. First, we have to know that Akka Serverless users (CQRS)][https://martinfowler.com/bliki/CQRS.html] for supporting querying capabilities; the query mechanism always resides in a separate service/API, even if running within the same container environment. This ultimately gives the developer more control and performance for querying, whether for basic or more advanced needs. THis means that we need to add a peer service definition. Normally, we're likely to do this in a separate file and probably repository as well. But for now we'll do in the same API specification file: `api_spec.proto`.
+                1. Add an empty service definition at the end of the file, called `MyQueryApi`:
+                    ```
+                    service MyQueryApi {
+
+                    }
+                    ```
+                2. Querying in Akka Serverless is based on a feature called (`views`)[https://developer.lightbend.com/docs/akka-serverless/reference/glossary.html#view]. Views are created automatically by Akka Serverless based on the **events** that occur, e.g. new data created, updated or deleted. As such, we have to define an API - not called directly by a develope - that will be used by Akka Serverless to connect the events to the query tables that will be created and managed. We do this 
+
+                    ```
+                    rpc UpdateView(UserProfile) returns (UserProfile) {
+                        option (akkaserverless.method).eventing = {
+                        in: {
+                            value_entity: "user_profiles"
+                        }
+                        };
+                        option (akkaserverless.method).view.update = {
+                        table: "user_profiles"
+                        };
+                    }
+
+
+                    ```
+                3. The second part of our new `MyQueryApi` will be the actual API call that can be used by a developer to make the actual query. In this case, let's do a simple query for fetching all of the users created by our `MyApi`. Name of the API is `GetUsers`, with no input parameters supported an a resonse of type `UsersResponse`. The annotation used, to define the query, is `option (akkaserverless.method).view.query` and the query is a simple select statement: `SELECT * AS results FROM user_profiles`.
+
+                   ```
+                    rpc GetUsers(google.protobuf.Empty) returns (UsersResponse) {
+                        option (akkaserverless.method).view.query = {
+                        query: "SELECT * AS results FROM user_profiles"
+                        };
+                        option (google.api.http) = {
+                            get: "/users"
+                        };  
+                    }  
+                   ```
+                4. In the above, we have a new message type that we have to define: `UsersResponse`. In this case, it is a simple list of `UserProfile` messages. The definition is:
+                    ```
+                    message UsersResponse {
+                        repeated UserProfile results = 1; 
+                    }
+                    ```
+                5. Now we have our API defined and the eventing setup so the underlying data structures are populated. We connect this to code by updating our `api_impl.py`. We need to import some modules and then setup the View. You can add the below right after the `from api_spec_pb2 import (UserProfile, MyRequest, MyResponse, _MYAPI, DESCRIPTOR as API_DESCRIPTOR)` line. You could also put at the bottom of the file as well.
+                    ```
+                    from akkaserverless.view import View
+                    from api_spec_pb2 import (_MYQUERYAPI, DESCRIPTOR as FILE_DESCRIPTOR)
+
+                    view = View(_MYQUERYAPI,[FILE_DESCRIPTOR])
+                    ```
+                6. The final step is to expose it to the Akka Serverless run-time. Update the `api_service.py` file to import the `view` and add it to the list of components served. The file should look like:
+
+                    ```
+                    """
+                    Copyright 2020 Lightbend Inc.
+                    Licensed under the Apache License, Version 2.0.
+                    """
+
+                    from akkaserverless.akkaserverless_service import AkkaServerlessService
+                    from api_impl import entity as myapi
+                    from api_impl import view as myquery
+                    import logging
+
+                    if __name__ == '__main__':
+                        logging.basicConfig(level=logging.DEBUG)
+                        
+                        # create service and add components
+                        service = AkkaServerlessService()
+                        service.add_component(myapi)
+                        service.add_component(myquery)
+                        service.start()
+
+
+                    ```
+                7. Start
+                8. `curl -X POST -H "Content-Type: application/json" http://localhost:9000/users -d '{"user_profile_id": "test", "name": "My Name", "status": "active", "devices":[]}'`
+                9. `curl -X GET -H "Content-Type: application/json" http://localhost:9000/users`
