@@ -52,17 +52,11 @@ action = Action(_MYEVENTAPI,[FILE_DESCRIPTOR])
 
 @action.unary_handler("ValidateDevices")
 def trigger(command: UserDevices, context: ActionContext):
-    print("UpdateDevices!!")
-    print(command.devices)    
-    print("--------------------")
     return UserProfile(user_profile_id="test", name="Jeremy Pollock", status="active", devices=command.devices)
 
 
 @entity.command_handler("UpdateUserDevices")
 def test(state: UserProfile, command: UserProfile, context: ActionContext):
-    print("Test!!")
-    print(command)
-    print("--------------------")
     context.update_state(command)
     return Empty()
  
