@@ -1,6 +1,8 @@
 // This is the public API offered by your entity.
 syntax = "proto3";
 
+
+import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 import "akkaserverless/annotations.proto";
 import "google/api/annotations.proto";
@@ -49,6 +51,14 @@ service MyApi {
         };  
     } 
 
+    rpc UpdateUserDevices(UserProfile) returns (google.protobuf.Empty) {
+        option (akkaserverless.method).eventing = {
+            in: {
+              topic: "device_added"
+            }
+        };
+    };  
+
  
 }
 
@@ -76,4 +86,27 @@ service MyQueryApi {
             get: "/users"
         };  
     }  
+}
+
+message UserDevices {
+    string user_profile_id = 1;
+    repeated Device devices = 4;
+    
+}
+
+service MyEventApi {
+    rpc ValidateDevices(UserDevices) returns (UserProfile) {
+        option (akkaserverless.method).eventing = {
+            out: {
+              topic: "device_added"
+            }
+        };
+        option (google.api.http) = {
+            post: "/users/{user_profile_id}/devices",
+            body: "*"
+        };
+    };          
+    
+
+        
 }

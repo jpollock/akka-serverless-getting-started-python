@@ -42,3 +42,27 @@ def update_user(state: UserProfile, command: UserProfile, context: ValueEntityCo
 
 
 
+from google.protobuf.empty_pb2 import Empty
+from akkaserverless.action_context import ActionContext
+from akkaserverless.action_protocol_entity import Action
+
+from api_spec_pb2 import (UserDevices, _MYEVENTAPI, DESCRIPTOR as FILE_DESCRIPTOR)
+
+action = Action(_MYEVENTAPI,[FILE_DESCRIPTOR])
+
+@action.unary_handler("ValidateDevices")
+def trigger(command: UserDevices, context: ActionContext):
+    print("UpdateDevices!!")
+    print(command.devices)    
+    print("--------------------")
+    return UserProfile(user_profile_id="test", name="Jeremy Pollock", status="active", devices=command.devices)
+
+
+@entity.command_handler("UpdateUserDevices")
+def test(state: UserProfile, command: UserProfile, context: ActionContext):
+    print("Test!!")
+    print(command)
+    print("--------------------")
+    context.update_state(command)
+    return Empty()
+ 

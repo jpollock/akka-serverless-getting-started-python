@@ -114,8 +114,8 @@ import random
 
 from google.protobuf.empty_pb2 import Empty
 
-from akkaserverless.context import ActionContext
-from akkaserverless.protocol_entity import Action
+from akkaserverless.action_context import ActionContext
+from akkaserverless.action_protocol_entity import Actio
 from api_spec_pb2 import (MyRequest, MyResponse, _THINGACTIONSERVICE, DESCRIPTOR as API_DESCRIPTOR)
 
 
@@ -351,3 +351,39 @@ The objective of this exercise will be to deliver on the following requirements:
                 7. Start
                 8. `curl -X POST -H "Content-Type: application/json" http://localhost:9000/users -d '{"user_profile_id": "test", "name": "My Name", "status": "active", "devices":[]}'`
                 9. `curl -X GET -H "Content-Type: application/json" http://localhost:9000/users`
+
+# Implement Update A User's devices via Pubsub (Eventing)
+
+1. Open the `api_spec.proto` to add a new API method to the `MyApi` service. 
+   ```
+    rpc UpdateUserDevices(UserProfile) returns (google.protobuf.Empty) {
+        option (akkaserverless.method).eventing = {
+            in: {
+              topic: "device_added"
+            }
+        };
+    };  
+    ```
+2. At the bottom of the `api_spec.proto`, add a new service that will simulate external system.
+    ```
+    message UserDevices {
+        string user_profile_id = 1;
+        repeated Device devices = 4;
+    
+    }
+
+    service MyEventApi {
+        rpc ValidateDevices(UserDevices) returns (UserProfile) {
+            option (akkaserverless.method).eventing = {
+                out: {
+                topic: "device_added"
+                }
+            };
+            option (google.api.http) = {
+                post: "/users/{user_profile_id}/devices",
+                body: "*"
+            };
+        };             
+    }
+    ```
+3. 
