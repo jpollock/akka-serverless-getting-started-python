@@ -5,10 +5,8 @@ RUN apt-get install -y curl zip
 
 WORKDIR /app
 COPY ./ ./
-ADD bin bin
 RUN pip install -r requirements.txt
 
-RUN /app/bin/compile.sh
-
 ENV PYTHONPATH=/app
-ENTRYPOINT python ./action_service.py
+ENTRYPOINT python ./api_service.py
+
